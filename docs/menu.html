@@ -55,6 +55,7 @@ header .subtitle { margin-top: 6px; font-size: 14px; color: var(--text-muted); }
 .thumb img.loaded { opacity: 1; }
 .thumb img:active { opacity: 0.85; }
 .thumb.error::after { content: '이미지를 불러올 수 없습니다'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px; }
+.thumb.empty-img::after { content: '이미지 없음'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px; }
 
 .label { padding: 12px 16px; }
 .header-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -136,21 +137,28 @@ try {
     const origins = Array.isArray(item.og) ? item.og.filter(Boolean) : [];
     const spicy = item.s || 0;
 
-    if (!imgUrl || !isAllowedUrl(imgUrl)) return;
+    // 이름조차 없는 완전 빈 아이템만 건너뜀 (이미지가 없어도 메뉴는 표시)
+    if (!name && !category && !dishes.length) return;
+
+    const hasImage = imgUrl && isAllowedUrl(imgUrl);
 
     const card = document.createElement('div');
     card.className = 'card';
 
     const thumb = document.createElement('div');
     thumb.className = 'thumb';
-    const img = document.createElement('img');
-    img.src = imgUrl;
-    img.alt = name;
-    img.loading = 'lazy';
-    img.onload = () => img.classList.add('loaded');
-    img.onerror = () => { thumb.classList.add('error'); img.remove(); };
-    img.onclick = () => { overlayImg.src = imgUrl; overlayImg.alt = name; overlay.classList.add('active'); };
-    thumb.appendChild(img);
+    if (hasImage) {
+      const img = document.createElement('img');
+      img.src = imgUrl;
+      img.alt = name;
+      img.loading = 'lazy';
+      img.onload = () => img.classList.add('loaded');
+      img.onerror = () => { thumb.classList.add('error'); img.remove(); };
+      img.onclick = () => { overlayImg.src = imgUrl; overlayImg.alt = name; overlay.classList.add('active'); };
+      thumb.appendChild(img);
+    } else {
+      thumb.classList.add('empty-img');
+    }
 
     const label = document.createElement('div');
     label.className = 'label';
